@@ -6,7 +6,8 @@ const json = require('koa-json');
 const WS = require('ws');
 const router = new Router();
 const app = new Koa();
-const db = new Subscriptions();
+const uuid = require('uuid');
+const { db } = require('./DB/db');
 
 app.use( koaBody({
   urlencoded: true,
@@ -37,7 +38,7 @@ app.use( async (ctx, next) => {
   if (ctx.request.get('Access-Control-Request-Method')) {
     ctx.response.set({
       ...headers,
-      'Access-Control-Allow-Methods': 'GET, POST, PUD SOLI, DELETE, PATCH',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH',
     });
 
     if (ctx.request.get('Access-Control-Request-Headers')) {
@@ -54,35 +55,54 @@ const wsServer = new WS.Server({
   server
 });
 
-router.post('/', async (ctx) => {
-  const { nickname } = ctx.request.body;
-  if(db.existUser(nickname)) {
-    ctx.response.body = { status: false };
-    return;
-  }
-  // db.add(nickname);
-  // chat.length = 0;
-  console.log(chat)
-  // console.log(nickname)
-  ctx.response.body = {
-     status: true,
-     users: db.data,
-     chat: chat,
-    };
+// router.post('/', async (ctx) => {
+//   const { nickname } = ctx.request.body;
+//   if(db.existUser(nickname)) {
+//     ctx.response.body = { status: false };
+//     return;
+//   }
+//   // db.add(nickname);
+//   // chat.length = 0;
+//   console.log(chat)
+//   // console.log(nickname)
+//   ctx.response.body = {
+//      status: true,
+//      users: db.data,
+//      chat: chat,
+//     };
 
-})
+// })
+
+// router.get('/', (ctx) => {
+//     ctx.response.body = {
+//      status: true,
+//       data: db.postsList,
+//     };
+
+// })
 
 app.use(router.routes()).use(router.allowedMethods());
 
 wsServer.on('connection', (ws) => {
   ws.on('message', (e) => {
-    console.log(e);
+    const data = JSON.parse(e)
+    console.log(data);
+
+    data.data.id = uuid.v4();
+    db.addNewPosts(data);
+
     Array.from(wsServer.clients)
     .filter(client => client.readyState === WS.OPEN)
-    .forEach(client => client.send(JSON.stringify({ message: e })));
+    .forEach(client => client.send(JSON.stringify({
+      status: 'message',
+       data: data,
+     })));
   });
-  ws.send(JSON.stringify(chat));
 
+  ws.send(JSON.stringify({
+    status: 'init',
+     data: db.postsList,
+   }));
 });
 
 server.listen(port);
