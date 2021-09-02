@@ -42,10 +42,10 @@ app.use( async (ctx, next) => {
     return await next();
   }
 
-  const headers = { 'Access-Control-Allow-Origin': '*' };
+  const headers = { 'Access-Control-Allow-Origin': '*'};
 
   if (ctx.request.method !== 'OPTIONS') {
-    // console.log('! OPTIONS');
+    console.log('! OPTIONS');
     ctx.response.set({ ...headers });
     try {
       return await next();
@@ -95,13 +95,12 @@ router.get('/sse', async (ctx) => {
 });
 
 // router.get('/public/:name', (ctx) => {
-//   const file = ctx.request.files.file;
-//   const body = JSON.parse(ctx.request.body.textData);
-//   const linkSourse = await downloadMedia(file);
-//   body.data.content.link = linkSourse
-
-//   db.addNewPosts(body)
-//   ctx.response.body = {status: 'ok'};
+//   const fileName = ctx.params.name;
+//   console.log(public + fileName);
+//   ctx.redirect(public + fileName);
+//   // const fileName = ctx.params.name;
+//   // console.log(public + fileName)
+//   // ctx.response.file = public + fileName;
 // });
 
 router.post('/text', (ctx) => {
@@ -116,7 +115,7 @@ router.post('/media', async (ctx) => {
   const body = JSON.parse(ctx.request.body.textData);
   const linkSourse = await downloadMedia(file);
   body.data.content.link = linkSourse
-
+  console.log(body);
   db.addNewPosts(body)
   ctx.response.body = {status: 'ok'};
 });
