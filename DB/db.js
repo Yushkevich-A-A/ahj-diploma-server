@@ -39,8 +39,11 @@ const db = {
     },
 
     getPosts: function (id = this.postsList.length) {
-        const nextIndex = id - 10;
-        return this.postsList.slice( nextIndex, id);
+        let previousIndex = id - 10;
+        if (previousIndex < 0) {
+            previousIndex = 0;
+        }
+        return this.postsList.slice( previousIndex, id);
     },
 
     initSendPosts: function () {

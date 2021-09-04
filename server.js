@@ -15,7 +15,7 @@ const faker = require('faker');
 
 const public = path.join(__dirname, '/public');
 
-for (let i = 0 ; i < 15 ; i++) {
+for (let i = 0 ; i < 50 ; i++) {
   const obj = {
     type: 'text',
     data: {
@@ -94,18 +94,38 @@ router.get('/sse', async (ctx) => {
   ctx.respond = false;
 });
 
-// router.get('/public/:name', (ctx) => {
-//   const fileName = ctx.params.name;
-//   console.log(public + fileName);
-//   ctx.redirect(public + fileName);
-//   // const fileName = ctx.params.name;
-//   // console.log(public + fileName)
-//   // ctx.response.file = public + fileName;
-// });
+router.get('/previousposts/:id', (ctx) => {
+  const indexLastDownloadedPost = ctx.params.id;
+  const data =  db.getPosts(ctx.params.id);
+  if (data.length === 0) {
+    ctx.response.body = {status: false};
+    return;
+  }
+  ctx.response.body = {status: 'ok', data: data};
+});
+
+router.get('/download/:filename', (ctx) => {
+  const filname = ctx.params.filename;
+  const filepath = path.join(public, filname)
+  console.log(filepath)
+
+  const readStream = fs.readFileSync(filepath);
+  console.log(readStream);
+  ctx.response.body = readStream;
+
+
+  // We replaced all the event handlers with a simple call to readStream.pipe()
+  // readStream.on('open', function() {
+      // This just pipes the read stream to the response object (which goes to the client)
+      // readStream.pipe(ctx.response.body);
+  // });
+
+  // fs.createReadStream(filepath).pipe(ctx.response.body);
+  // ctx.response.body = {status: 'ok', data: data};
+});
 
 router.post('/text', (ctx) => {
     const item = JSON.parse(ctx.request.body);
-    console.log(item)
     db.addNewPosts(item);
     ctx.response.body = {status: 'ok'};
 });
@@ -114,8 +134,7 @@ router.post('/media', async (ctx) => {
   const file = ctx.request.files.file;
   const body = JSON.parse(ctx.request.body.textData);
   const linkSourse = await downloadMedia(file);
-  body.data.content.link = linkSourse
-  console.log(body);
+  body.data.content.link = linkSourse;
   db.addNewPosts(body)
   ctx.response.body = {status: 'ok'};
 });
