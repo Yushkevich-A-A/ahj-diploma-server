@@ -19,7 +19,9 @@ for (let i = 0 ; i < 50 ; i++) {
   const obj = {
     type: 'text',
     data: {
-        content: faker.lorem.sentence(),
+        content: {
+          text: faker.lorem.sentence()
+        },
         date: faker.date.past(),
     }
   }
@@ -75,6 +77,8 @@ const server = http.createServer(app.callback());
 
 app.use(router.routes()).use(router.allowedMethods());
 
+// подключение к серверу
+
 router.get('/sse', async (ctx) => {
   streamEvents(ctx.req, ctx.res, {
     async fetch(lastEventId) {
@@ -94,6 +98,8 @@ router.get('/sse', async (ctx) => {
   ctx.respond = false;
 });
 
+// ленивая подгрузка постов
+
 router.get('/previousposts/:id', (ctx) => {
   const indexLastDownloadedPost = ctx.params.id;
   const data =  db.getPosts(ctx.params.id);
@@ -104,6 +110,8 @@ router.get('/previousposts/:id', (ctx) => {
   ctx.response.body = {status: 'ok', data: data};
 });
 
+// скачивание медиа файла
+
 router.get('/download/:filename', (ctx) => {
   const filname = ctx.params.filename;
   const filepath = path.join(public, filname)
@@ -112,23 +120,17 @@ router.get('/download/:filename', (ctx) => {
   const readStream = fs.readFileSync(filepath);
   console.log(readStream);
   ctx.response.body = readStream;
-
-
-  // We replaced all the event handlers with a simple call to readStream.pipe()
-  // readStream.on('open', function() {
-      // This just pipes the read stream to the response object (which goes to the client)
-      // readStream.pipe(ctx.response.body);
-  // });
-
-  // fs.createReadStream(filepath).pipe(ctx.response.body);
-  // ctx.response.body = {status: 'ok', data: data};
 });
+
+// сохранение текстовых данных
 
 router.post('/text', (ctx) => {
     const item = JSON.parse(ctx.request.body);
     db.addNewPosts(item);
     ctx.response.body = {status: 'ok'};
 });
+
+// сохранение медиа данных
 
 router.post('/media', async (ctx) => {
   const file = ctx.request.files.file;
@@ -138,6 +140,8 @@ router.post('/media', async (ctx) => {
   db.addNewPosts(body)
   ctx.response.body = {status: 'ok'};
 });
+
+// скачивание медиа 
 
 async function downloadMedia(file) {
   const link = await new Promise((resolve, reject) => {
@@ -165,118 +169,3 @@ async function downloadMedia(file) {
 }
 
 server.listen(port);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const wsServer = new WS.Server({
-//   server
-// });
-
-// wsServer.binaryType = 'arraybuffer';
-
-
-// router.post('/', async (ctx) => {
-//   const { nickname } = ctx.request.body;
-//   if(db.existUser(nickname)) {
-//     ctx.response.body = { status: false };
-//     return;
-//   }
-//   // db.add(nickname);
-//   // chat.length = 0;
-  // console.log(chat)
-  // console.log(nickname)
-//   ctx.response.body = {
-//      status: true,
-//      users: db.data,
-//      chat: chat,
-//     };
-
-// })
-
-// router.get('/', (ctx) => {
-//     ctx.response.body = {
-//      status: true,
-//       data: db.postsList,
-//     };
-
-// })
-
-// wsServer.on('connection', (ws) => {
-//   ws.on('message', (e) => {
-//     // const data = JSON.parse(e)
-//     console.log('данные пришли')
-//     downloadFile(e);
-//     // if (data.type === 'image' || data.type === 'video' || data.type === 'audio') {
-//     //   downloadFile(data.data.content.sourse);
-//     // }
-//     // const sendData = db.addNewPosts(data);
-
-//     // Array.from(wsServer.clients)
-//     // .filter(client => client.readyState === WS.OPEN)
-//     // .forEach(client => client.send(JSON.stringify({
-//     //   status: 'message',
-//     //    data: sendData,
-//     //  })));
-//   });
-
-//   ws.send(JSON.stringify({
-//     status: 'init',
-//      data: db.getPosts(),
-//    }));
-// });
-
-
-
-// async function downloadFile(data) {
-//   console.log(data);
-//   // const byteArray = new Buffer(data.sourse.replace(/^[\w\d;:\/]+base64\,/g, ''), 'base64');
-//   // const sendFile = new File([byteArray], data.fileName, {type: data.filetype});
-  
-//   // async () => {
-//   //   const getResponse = await fetch(data.sourse);
-//   //   const blob = await getResponse.blob();
-//   //   const file = new File([blob], data.fileName, {type: data.filetype});
-//   //   return file;
-//   // }
-
-//   // const sendFile = Buffer.from(data.sourse)
-//   // console.log(sendFile);
-//   let i = new Uint8Array(data);
-
-//   i = data;
-
-//   const link = await new Promise((resolve, reject) => {
-//     const oldPath =  i;
-//     const fileName = "newf.jpg";
-//     const newPath = path.join(public, fileName);
-
-//     const callback = (error) => reject(error);
-
-//     const readStream = fs.createReadStream(oldPath);
-//     const writeStream = fs.createWriteStream(newPath);
-
-//     readStream.on('error', callback);
-//     writeStream.on('error', callback);
-
-//     writeStream.on('close', () => {
-//       fs.unlink(oldPath, callback);
-//       // console.log('close');
-//       resolve(fileName);
-//     });
-
-//     readStream.pipe(writeStream);
-//   });
-// }
