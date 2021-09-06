@@ -10,11 +10,12 @@ const { streamEvents } = require('http-event-stream');
 const router = new Router();
 const app = new Koa();
 
+
 const { db } = require('./DB/db');
 const faker = require('faker');
+const { emoji } = require('./DB/emoji');
 
 const public = path.join(__dirname, '/public');
-
 for (let i = 0 ; i < 50 ; i++) {
   const obj = {
     type: 'text',
@@ -115,10 +116,7 @@ router.get('/previousposts/:id', (ctx) => {
 router.get('/download/:filename', (ctx) => {
   const filname = ctx.params.filename;
   const filepath = path.join(public, filname)
-  console.log(filepath)
-
   const readStream = fs.readFileSync(filepath);
-  console.log(readStream);
   ctx.response.body = readStream;
 });
 
@@ -167,5 +165,12 @@ async function downloadMedia(file) {
   });
   return link;
 }
+
+// запрос эмоджи
+
+router.get('/emoji', (ctx) => {
+  ctx.response.body = {status: 'ok', data :emoji};
+});
+
 
 server.listen(port);

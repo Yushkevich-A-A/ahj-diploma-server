@@ -5,6 +5,7 @@ const db = {
     postsImage:[],
     postsVideo: [],
     postsAudio: [],
+    notifications: [],
 
     getId: function() {
         const currentId = this.postId;
@@ -14,6 +15,13 @@ const db = {
 
     addNewPosts: function(data) {
         const newPostData = data;
+
+        if (newPostData.type === 'notification') {
+            this.notifications.push(newPostData);
+            this.handlers.forEach(h => h(newPostData));
+            return;
+        }
+
         newPostData.data.id = this.getId();
         switch (newPostData.type) {
             case 'video':
@@ -25,7 +33,7 @@ const db = {
             case 'audio':
                 this.postsAudio.push(newPostData.data.content.link);
                 break;
-        }
+        } 
 
         this.postsList.push(newPostData);
         this.handlers.forEach(h => h(newPostData));
@@ -47,7 +55,15 @@ const db = {
     },
 
     initSendPosts: function () {
-        this.handlers.forEach(h => h({status: 'init', data: this.getPosts()}));
+        this.checkNotifications();
+        this.handlers.forEach(h => h({status: 'init', data: this.getPosts(), notifications: this.notifications}));
+    },
+    // Очистка памяти уведомлений
+    checkNotifications() {
+        const deleteNotifications = this.notifications.filter(item => item.data.date < Date.now());
+        for(let i of deleteNotifications) {
+            this.notifications.splice(this.notifications.findIndex(item => item.data.date === i.data.date), 1)
+        }
     }
 }
 
