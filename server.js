@@ -21,7 +21,7 @@ for (let i = 0 ; i < 50 ; i++) {
     type: 'text',
     data: {
         content: {
-          text: faker.lorem.sentence()
+          text: [faker.lorem.sentence()]
         },
         date: faker.date.past(),
     }
@@ -124,6 +124,7 @@ router.get('/download/:filename', (ctx) => {
 
 router.post('/text', (ctx) => {
     const item = JSON.parse(ctx.request.body);
+    console.log(item);
     db.addNewPosts(item);
     ctx.response.body = {status: 'ok'};
 });
@@ -169,7 +170,7 @@ async function downloadMedia(file) {
 // запрос эмоджи
 
 router.get('/emoji', (ctx) => {
-  ctx.response.body = {status: 'ok', data :emoji};
+  ctx.response.body = {status: 'ok', data : emoji};
 });
 
 

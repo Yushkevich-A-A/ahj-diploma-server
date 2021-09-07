@@ -1,3 +1,14 @@
+const { getWeather } = require('./weather');
+const { getCites } = require('./cites')
+const { emergency } = require('./emergency')
+const { taxi } = require('./taxi')
+const { exchangeRate } = require('./exchangeRate')
+
+
+
+
+
+
 const db = {
     postId: 0,
 
@@ -21,6 +32,33 @@ const db = {
             this.handlers.forEach(h => h(newPostData));
             return;
         }
+
+        if (newPostData.type === 'chaos') {
+            const response = {
+                type: newPostData.type,
+            };
+            switch (newPostData.data.type) {
+                case 'погода':
+                    response.data = getWeather();
+                    break;
+                case 'курс':
+                    response.data = exchangeRate;
+                    break;
+                case 'экстренно':
+                    response.data = emergency;
+                    break;
+                case 'цитата':
+                    response.data = getCites();
+                    break;
+                case 'такси':
+                    response.data = taxi;
+                    break;
+            }
+            this.handlers.forEach(h => h(response));
+            return;
+        }
+
+
 
         newPostData.data.id = this.getId();
         switch (newPostData.type) {
