@@ -15,6 +15,8 @@ const { db } = require('./DB/db');
 const faker = require('faker');
 const { emoji } = require('./DB/emoji');
 
+let initFakeTime = Date.now() - 5000000;
+
 const public = path.join(__dirname, '/public');
 for (let i = 0 ; i < 50 ; i++) {
   const obj = {
@@ -23,11 +25,16 @@ for (let i = 0 ; i < 50 ; i++) {
         content: {
           text: [faker.lorem.sentence()]
         },
-        date: faker.date.past(),
+        date: initFakeTime,
     }
   }
   db.addNewPosts(obj);
+
+  initFakeTime += 10000;
 }
+
+getInitMediaFiles();
+
 
 app.use( koaBody({
   urlencoded: true,
@@ -136,6 +143,7 @@ router.post('/media', async (ctx) => {
   const body = JSON.parse(ctx.request.body.textData);
   const linkSourse = await downloadMedia(file);
   body.data.content.link = linkSourse;
+  console.log(body)
   db.addNewPosts(body)
   ctx.response.body = {status: 'ok'};
 });
@@ -172,6 +180,40 @@ async function downloadMedia(file) {
 router.get('/emoji', (ctx) => {
   ctx.response.body = {status: 'ok', data : emoji};
 });
+
+function getInitMediaFiles() {
+  const obj = {
+      type: 'video',
+      data: { content: { link: 'videoplayback.mp4' }, 
+      date: initFakeTime 
+    }
+  }
+  db.addNewPosts(obj);
+
+  initFakeTime += 10000;
+
+  const image = {
+    type: 'image',
+    data: {
+      content: { link: 'a88ca4cdc69aa0d9bc8064f7d36871a4.jpg' },
+      date: initFakeTime
+    }
+  }
+  db.addNewPosts(image);
+
+  initFakeTime += 10000;
+
+  const audio = {
+      type: 'audio',
+      data: { content: { link: 'test.mp3' }, 
+      date: initFakeTime 
+    }
+  }
+
+  db.addNewPosts(audio);
+
+  initFakeTime += 10000;
+}
 
 
 server.listen(port);

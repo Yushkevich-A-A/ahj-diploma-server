@@ -4,11 +4,6 @@ const { emergency } = require('./emergency')
 const { taxi } = require('./taxi')
 const { exchangeRate } = require('./exchangeRate')
 
-
-
-
-
-
 const db = {
     postId: 0,
 
